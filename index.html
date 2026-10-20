@@ -213,7 +213,7 @@ function csv(){const te=S.tests.find(x=>x.id===RS.tid),ap=S.papers.filter(p=>p.t
 function set(){return `<h2>${t('set')}</h2><div class="card"><div class="row"><button class="b s" onclick="setLang('ar')">العربية</button><button class="b s" onclick="setLang('en')">English</button></div>
  <p><label style="display:flex;gap:8px;align-items:center;color:var(--tx)"><input type="checkbox" style="width:auto;min-height:0" ${S.ind?'checked':''} onchange="S.ind=this.checked;save();render()"> ${t('digits')}</label></p></div>
  <div class="card"><p>${t('priv')}</p><p class="note">${t('auth')}</p><button class="b s" onclick="sample()">${t('sample')}</button> <button class="b d" onclick="if(confirm(t('sure'))){S=def();save();render()}">${t('wipe')}</button></div>`}
-function sample(){const c={id:uid(),name:'SAMPLE – 7A'},a={id:uid(),name:'SAMPLE – Student A',num:'S1',cid:c.id},b={id:uid(),name:'SAMPLE – طالب ب',num:'S2',cid:c.id};
- S.classes.push(c);S.students.push(a,b);S.tests.push({id:uid(),title:'SAMPLE – Quiz',cid:c.id,date:'',lang:'mixed',ok:true,qs:[{id:uid(),type:'mcq',label:'1',pts:1,key:'B',alt:'',opts:'A,B,C,D',note:''},{id:uid(),type:'numeric',label:'2',pts:2,key:'12',alt:'',note:''},{id:uid(),type:'essay',label:'3',pts:5,key:'',alt:'',note:''}]});save();render()}
+function sample(){if(S.classes.some(x=>x.name==='SAMPLE – 7A')){toast(t('saved'));return go('scan')}const c={id:uid(),name:'SAMPLE – 7A'},a={id:uid(),name:'SAMPLE – Student A',num:'S1',cid:c.id},b={id:uid(),name:'SAMPLE – طالب ب',num:'S2',cid:c.id};
+ S.classes.push(c);S.students.push(a,b);S.tests.push({id:uid(),title:'SAMPLE – Quiz',cid:c.id,date:'',lang:'mixed',ok:true,qs:[{id:uid(),type:'mcq',label:'1',pts:1,key:'B',alt:'',opts:'A,B,C,D',note:''},{id:uid(),type:'numeric',label:'2',pts:2,key:'12',alt:'',note:''},{id:uid(),type:'essay',label:'3',pts:5,key:'',alt:'',note:''}]});save();toast(t('saved'));go('scan')}
 render();
 </script></body></html>
