@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Smart Test Grader</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap">
+<style>
+:root{--bg:#f2f5f7;--sf:#fff;--tx:#17202b;--mu:#566373;--ln:#d5dde4;--ac:#0f6b64;--acx:#fff;--ok:#146c3a;--bad:#a12626;--wn:#8a5a00;--nf:#1f4f8f;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#10171d;--sf:#18222b;--tx:#e8eef3;--mu:#9fb0bf;--ln:#2c3a47;--ac:#4fc3b8;--acx:#08201d;--ok:#6fd49a;--bad:#ff9b9b;--wn:#f0c26a;--nf:#8db9f2}}
+:root[data-theme="dark"]{--bg:#10171d;--sf:#18222b;--tx:#e8eef3;--mu:#9fb0bf;--ln:#2c3a47;--ac:#4fc3b8;--acx:#08201d;--ok:#6fd49a;--bad:#ff9b9b;--wn:#f0c26a;--nf:#8db9f2}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.6 "IBM Plex Sans Arabic",system-ui,"Segoe UI",Tahoma,sans-serif}
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--sf);border-bottom:1px solid var(--ln);display:flex;align-items:center;gap:12px;padding:10px 16px;flex-wrap:wrap}
+h1{font-size:1.1rem;margin:0;font-weight:600;margin-inline-end:auto}h2{font-size:1.3rem;margin:.2em 0 .6em}h3{font-size:1.05rem;margin:.2em 0}
+nav{display:flex;gap:4px;overflow-x:auto;padding:8px 12px;background:var(--sf);border-bottom:1px solid var(--ln)}
+nav button{white-space:nowrap;background:none;border:0;padding:10px 14px;border-radius:8px;color:var(--mu);font:inherit;cursor:pointer;min-height:44px}
+nav button.on{background:var(--ac);color:var(--acx);font-weight:600}
+main{max-width:1000px;margin:0 auto;padding:16px}
+.card{background:var(--sf);border:1px solid var(--ln);border-radius:10px;padding:16px;margin-bottom:14px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:end}.row>*{flex:1 1 150px}
+label{display:block;font-size:.9rem;color:var(--mu);margin-bottom:2px}
+input,select,textarea,button{font:inherit;color:var(--tx)}
+input,select,textarea{width:100%;padding:10px;border:1px solid var(--ln);border-radius:8px;background:var(--bg);min-height:44px}
+:focus-visible{outline:3px solid var(--nf);outline-offset:2px}
+.b{background:var(--ac);color:var(--acx);border:0;border-radius:8px;padding:10px 16px;min-height:44px;cursor:pointer;font-weight:600}
+.b.s{background:none;color:var(--tx);border:1px solid var(--ln)}.b.d{background:none;color:var(--bad);border:1px solid var(--bad)}.b:disabled{opacity:.45;cursor:not-allowed}
+.tag{display:inline-block;padding:2px 10px;border-radius:99px;border:1px solid currentColor;font-size:.85rem;font-weight:600}
+.correct{color:var(--ok)}.incorrect{color:var(--bad)}.partial,.ambiguous,.review,.unreadable{color:var(--wn)}.blank{color:var(--mu)}
+table{width:100%;border-collapse:collapse}th,td{text-align:start;padding:8px;border-bottom:1px solid var(--ln)}.sc{overflow-x:auto}
+.stat{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}.stat div{background:var(--bg);border-radius:8px;padding:10px}.stat b{font-size:1.5rem;display:block}
+.note{border-inline-start:4px solid var(--wn);background:var(--bg);padding:10px 12px;border-radius:6px;margin:10px 0}
+.pg{position:relative;display:inline-block;margin:6px;border:1px solid var(--ln);border-radius:8px;padding:6px;text-align:center}.pg img{max-width:150px;max-height:200px;display:block;transition:transform .2s}
+.zoom{overflow:auto;max-height:340px;border:1px solid var(--ln);border-radius:8px;background:var(--bg)}
+.bar{height:14px;background:var(--ac);border-radius:4px;min-width:2px}
+#toast{position:fixed;inset-inline:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));background:var(--tx);color:var(--bg);padding:12px 16px;border-radius:8px;display:none;z-index:9}
+.q{border-top:1px solid var(--ln);padding:12px 0}
+@media print{header,nav,.np{display:none!important}}
+</style></head><body>
+<header><h1 id="ttl"></h1><div style="display:flex;gap:6px"><button class="b s" onclick="setLang('ar')" aria-label="العربية">العربية</button><button class="b s" onclick="setLang('en')">English</button></div></header>
+<nav id="nv"></nav><main id="app"></main><div id="toast" role="status"></div>
+<script>
+const T={
+en:{app:"Smart Test Grader",dash:"Dashboard",classes:"Classes",students:"Students",tests:"Tests",scan:"Scan and Grade",res:"Results and Reports",set:"Settings",
+cc:"classes",ss:"students",tt:"tests",pp:"papers graded",aw:"Awaiting review",qa:"Quick actions",ct:"Create test",sa:"Scan answer sheet",
+name:"Name",sid:"Student ID (optional)",cls:"Class",add:"Add",imp:"Import CSV (name, ID)",del:"Delete",sure:"Delete this item? This cannot be undone.",
+title:"Test title",date:"Date",lang:"Test language",ar:"Arabic",en:"English",mx:"Mixed",addq:"Add question",qt:"Type",pts:"Points",key:"Correct answer",
+alt:"Accepted variations (separate with |)",opts:"Options (A,B,C,D)",qn:"Teacher note",mc:"Multiple choice",tf:"True/false",nu:"Numeric",sh:"Short text",es:"Essay (manual review)",
+conf:"I confirm this answer key is correct and can be used for grading",save:"Save test",ready:"Ready to grade",draft:"Draft",
+t_correct:"Correct",t_incorrect:"Incorrect",t_partial:"Partially correct",t_unreadable:"Unreadable",t_ambiguous:"Ambiguous",t_review:"Needs teacher review",t_blank:"Not answered",
+none:"Nothing here yet.",pick:"Test",stu:"Student (optional, link later)",pages:"Page images",up:"Add pages",cam:"Take photo",gal:"Choose from gallery",rot:"Rotate",rm:"Remove",
+dark:"This photo looks dark. Retake it in better light.",small:"This image is low resolution. Text may not be readable.",tips:"Tips: good light, page flat, no shadows, whole page visible.",
+ocr:"Automatic reading is not connected in this version. Read each page and type the answers; grading still follows your confirmed key. Nothing is guessed for you.",
+go:"Continue to answers",stdans:"Student answer",score:"Score",cmt:"Comment",total:"Total",approve:"Approve final grade",approved:"Approved",
+blocked:"Resolve all questions marked for review before approving.",zoom:"Zoom",log:"Change log",open:"Open",avg:"Average",med:"Median",hi:"Highest",lo:"Lowest",
+based:"Based on {a} approved of {b} papers.",pend:"Unapproved papers are excluded.",qperf:"Question performance (% full marks)",exp:"Export CSV",inclid:"Include student IDs",
+print:"Print report",sens:"Exported files contain sensitive student information.",priv:"Privacy: data stays in this browser only. Nothing is uploaded or shared. Images are downscaled and kept until you delete them. Check your school's policies.",
+sample:"Load sample data (labeled SAMPLE)",wipe:"Delete all my data",digits:"Use Arabic-Indic digits",saved:"Saved",err:"Could not save: storage is full. Delete old papers or images.",
+needq:"Add a title, a class, and at least one question with a correct answer.",needc:"Confirm the answer key first.",needs:"Add a class and a test first.",unassigned:"Unassigned",
+auto:"Auto-graded",edited:"Edited by teacher",why:"Reason",mismatch:"Does not match key",matchk:"Matches key",manual:"Needs manual score",auth:"Sign-in and multi-teacher accounts need a server. This version is single-user, local to this device.",
+status:"Status",sample_t:"SAMPLE"},
+ar:{app:"المصحح الذكي للاختبارات",dash:"لوحة التحكم",classes:"الفصول",students:"الطلاب",tests:"الاختبارات",scan:"المسح والتصحيح",res:"النتائج والتقارير",set:"الإعدادات",
+cc:"فصول",ss:"طلاب",tt:"اختبارات",pp:"أوراق مصححة",aw:"بانتظار المراجعة",qa:"إجراءات سريعة",ct:"إنشاء اختبار",sa:"مسح ورقة إجابة",
+name:"الاسم",sid:"رقم الطالب (اختياري)",cls:"الفصل",add:"إضافة",imp:"استيراد CSV (الاسم، الرقم)",del:"حذف",sure:"هل تريد حذف هذا العنصر؟ لا يمكن التراجع.",
+title:"عنوان الاختبار",date:"التاريخ",lang:"لغة الاختبار",ar:"العربية",en:"الإنجليزية",mx:"مختلطة",addq:"إضافة سؤال",qt:"النوع",pts:"الدرجة",key:"الإجابة الصحيحة",
+alt:"صيغ مقبولة (افصل بـ |)",opts:"الخيارات (أ,ب,ج,د)",qn:"ملاحظة المعلم",mc:"اختيار من متعدد",tf:"صح/خطأ",nu:"رقمي",sh:"إجابة قصيرة",es:"مقالي (مراجعة يدوية)",
+conf:"أؤكد أن مفتاح الإجابة صحيح ويمكن استخدامه في التصحيح",save:"حفظ الاختبار",ready:"جاهز للتصحيح",draft:"مسودة",
+t_correct:"صحيحة",t_incorrect:"خاطئة",t_partial:"صحيحة جزئيا",t_unreadable:"غير مقروءة",t_ambiguous:"غير واضحة",t_review:"تحتاج مراجعة المعلم",t_blank:"بلا إجابة",
+none:"لا يوجد شيء بعد.",pick:"الاختبار",stu:"الطالب (اختياري، يمكن الربط لاحقا)",pages:"صور الصفحات",up:"إضافة صفحات",cam:"التقاط صورة",gal:"اختيار من المعرض",rot:"تدوير",rm:"إزالة",
+dark:"الصورة معتمة. أعد التصوير في إضاءة أفضل.",small:"دقة الصورة منخفضة. قد لا يمكن قراءة النص.",tips:"نصائح: إضاءة جيدة، ورقة مسطحة، بلا ظلال، الصفحة كاملة ظاهرة.",
+ocr:"القراءة التلقائية غير متصلة في هذه النسخة. اقرأ كل صفحة واكتب الإجابات؛ يبقى التصحيح وفق مفتاحك المؤكد. لا يتم تخمين شيء.",
+go:"المتابعة إلى الإجابات",stdans:"إجابة الطالب",score:"الدرجة",cmt:"تعليق",total:"المجموع",approve:"اعتماد الدرجة النهائية",approved:"معتمدة",
+blocked:"عالج كل الأسئلة المعلمة للمراجعة قبل الاعتماد.",zoom:"تكبير",log:"سجل التغييرات",open:"فتح",avg:"المتوسط",med:"الوسيط",hi:"الأعلى",lo:"الأدنى",
+based:"بناء على {a} معتمدة من {b} ورقة.",pend:"الأوراق غير المعتمدة مستثناة.",qperf:"أداء الأسئلة (% الدرجة الكاملة)",exp:"تصدير CSV",inclid:"تضمين أرقام الطلاب",
+print:"طباعة التقرير",sens:"الملفات المصدّرة تحتوي على بيانات حساسة للطلاب.",priv:"الخصوصية: تبقى البيانات في هذا المتصفح فقط. لا شيء يُرفع أو يُشارك. الصور تُصغّر وتبقى حتى تحذفها. راجع سياسات مدرستك.",
+sample:"تحميل بيانات تجريبية (موسومة SAMPLE)",wipe:"حذف كل بياناتي",digits:"استخدام الأرقام الهندية",saved:"تم الحفظ",err:"تعذر الحفظ: التخزين ممتلئ. احذف أوراقا أو صورا قديمة.",
+needq:"أضف عنوانا وفصلا وسؤالا واحدا على الأقل بإجابة صحيحة.",needc:"أكد مفتاح الإجابة أولا.",needs:"أضف فصلا واختبارا أولا.",unassigned:"غير مرتبط",
+auto:"تصحيح تلقائي",edited:"عدّله المعلم",why:"السبب",mismatch:"لا تطابق المفتاح",matchk:"تطابق المفتاح",manual:"تحتاج درجة يدوية",auth:"تسجيل الدخول وحسابات المعلمين المتعددة يحتاجان خادما. هذه النسخة لمستخدم واحد على هذا الجهاز.",
+status:"الحالة",sample_t:"SAMPLE"}};
+const ICON={correct:"✓",incorrect:"✗",partial:"◐",unreadable:"?",ambiguous:"?",review:"!",blank:"–"};
+const def=()=>({lang:'en',ind:false,classes:[],students:[],tests:[],papers:[]});
+let S;try{S=Object.assign(def(),JSON.parse(localStorage.getItem('stg')||'{}'))}catch(e){S=def()}
+let V='dash',D=null,SC={pages:[]},CUR=null,uid=()=>Math.random().toString(36).slice(2,9);
+const t=k=>T[S.lang][k]||k,$=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const n=x=>S.ind?String(x).replace(/\d/g,d=>'٠١٢٣٤٥٦٧٨٩'[d]):String(x);
+const w=s=>String(s).replace(/[٠-٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d));
+function save(){try{localStorage.setItem('stg',JSON.stringify(S));return true}catch(e){toast(t('err'));return false}}
+function toast(m){const e=$('#toast');e.textContent=m;e.style.display='block';clearTimeout(toast.h);toast.h=setTimeout(()=>e.style.display='none',3200)}
+function setLang(l){S.lang=l;save();render()}
+function go(v){V=v;render();scrollTo(0,0)}
+const nm=s=>S.students.find(x=>x.id===s)?.name||t('unassigned');
+const cn=id=>S.classes.find(c=>c.id===id)?.name||'';
+const norm=s=>w(String(s||'')).trim().replace(/\s+/g,' ').toLowerCase();
+function grade(q,a){
+ if(!norm(a))return{status:'blank',score:0,why:t('manual').slice(0,0)+'—',auto:true};
+ if(q.type==='essay')return{status:'review',score:0,why:t('manual'),auto:false};
+ const ok=[q.key,...(q.alt||'').split('|')].map(norm).filter(Boolean);
+ if(q.type==='numeric'){const x=parseFloat(norm(a)),y=parseFloat(norm(q.key));if(!isNaN(x)&&x===y)return{status:'correct',score:+q.pts,why:t('matchk'),auto:true}}
+ else if(ok.includes(norm(a)))return{status:'correct',score:+q.pts,why:t('matchk'),auto:true};
+ return{status:'incorrect',score:0,why:t('mismatch'),auto:true}}
+const tot=p=>Object.values(p.ans).reduce((s,a)=>s+(+a.score||0),0);
+const mx=te=>te.qs.reduce((s,q)=>s+(+q.pts||0),0);
+const pend=p=>Object.values(p.ans).some(a=>['review','ambiguous','unreadable'].includes(a.status));
+const tag=s=>`<span class="tag ${s}"><span aria-hidden="true">${ICON[s]}</span> ${t('t_'+s)}</span>`;
+
+function render(){
+ document.documentElement.lang=S.lang;document.documentElement.dir=S.lang==='ar'?'rtl':'ltr';
+ document.title=t('app');$('#ttl').textContent=t('app');
+ const items=[['dash','dash'],['classes','classes'],['students','students'],['tests','tests'],['scan','scan'],['res','res'],['set','set']];
+ $('#nv').innerHTML=items.map(([k,l])=>`<button class="${V===k||(V==='review'&&k==='scan')?'on':''}" onclick="go('${k}')">${t(l)}</button>`).join('');
+ $('#app').innerHTML=({dash,classes,students,tests,scan,res,set,review})[V]();
+ if(V==='review')bindReview()}
+
+function dash(){
+ const aw=S.papers.filter(p=>!p.approved);
+ return `<h2>${t('dash')}</h2><div class="card stat">
+ <div><b>${n(S.classes.length)}</b>${t('cc')}</div><div><b>${n(S.students.length)}</b>${t('ss')}</div><div><b>${n(S.tests.length)}</b>${t('tt')}</div><div><b>${n(S.papers.filter(p=>p.approved).length)}</b>${t('pp')}</div><div><b>${n(aw.length)}</b>${t('aw')}</div></div>
+ <div class="card"><h3>${t('qa')}</h3><div class="row"><button class="b" onclick="D=null;go('tests')">${t('ct')}</button><button class="b s" onclick="go('scan')">${t('sa')}</button></div></div>
+ <div class="card"><h3>${t('aw')}</h3>${aw.length?aw.map(p=>`<p><a href="#" onclick="CUR='${p.id}';go('review');return false">${esc(nm(p.sid))} – ${esc(S.tests.find(x=>x.id===p.tid)?.title)}</a></p>`).join(''):`<p>${t('none')}</p>`}</div>
+ <p class="note">${t('auth')}</p>`}
+
+function classes(){return `<h2>${t('classes')}</h2><div class="card"><div class="row"><div><label for="cn">${t('name')}</label><input id="cn"></div><button class="b" style="flex:0 0 auto" onclick="addClass()">${t('add')}</button></div></div>
+ <div class="card">${S.classes.length?S.classes.map(c=>`<div class="row" style="align-items:center"><b>${esc(c.name)}</b><span>${n(S.students.filter(s=>s.cid===c.id).length)} ${t('ss')}</span><button class="b d" style="flex:0 0 auto" onclick="del('classes','${c.id}')">${t('del')}</button></div>`).join('<hr>'):t('none')}</div>`}
+function addClass(){const v=$('#cn').value.trim();if(!v)return;if(S.classes.some(c=>c.name===v))return toast('⚠ '+v);S.classes.push({id:uid(),name:v});save();render()}
+function del(k,id){if(!confirm(t('sure')))return;S[k]=S[k].filter(x=>x.id!==id);save();render()}
+
+let SF={q:'',c:''};
+function students(){
+ const list=S.students.filter(s=>(!SF.c||s.cid===SF.c)&&(norm(s.name+' '+(s.num||'')).includes(norm(SF.q))));
+ return `<h2>${t('students')}</h2><div class="card"><div class="row"><div><label for="sn">${t('name')}</label><input id="sn"></div><div><label for="si">${t('sid')}</label><input id="si"></div>
+ <div><label for="sc">${t('cls')}</label><select id="sc">${S.classes.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('')}</select></div><button class="b" style="flex:0 0 auto" onclick="addStu()">${t('add')}</button></div>
+ <p><label for="csv">${t('imp')}</label><input type="file" id="csv" accept=".csv,text/csv" onchange="impCsv(this)"></p></div>
+ <div class="card"><div class="row"><input placeholder="🔍" aria-label="search" value="${esc(SF.q)}" oninput="SF.q=this.value;render();$('#app input[aria-label=search]').focus()"><select onchange="SF.c=this.value;render()"><option value="">${t('cls')}</option>${S.classes.map(c=>`<option value="${c.id}" ${SF.c===c.id?'selected':''}>${esc(c.name)}</option>`).join('')}</select></div>
+ <div class="sc"><table>${list.map(s=>`<tr><td>${esc(s.name)}</td><td>${esc(s.num||'')}</td><td>${esc(cn(s.cid))}</td><td><button class="b d" onclick="del('students','${s.id}')">${t('del')}</button></td></tr>`).join('')||`<tr><td>${t('none')}</td></tr>`}</table></div></div>`}
+function addStu(){const nme=$('#sn').value.trim(),cid=$('#sc').value;if(!nme||!cid)return toast(t('needs'));const num=$('#si').value.trim();
+ if(num&&S.students.some(s=>s.num===num&&s.cid===cid))return toast('⚠ '+num);S.students.push({id:uid(),name:nme,num,cid});save();render()}
+function impCsv(el){const f=el.files[0];if(!f)return;const cid=$('#sc').value;if(!cid)return toast(t('needs'));
+ f.text().then(tx=>{tx.split(/\r?\n/).forEach(l=>{const[a,b]=l.split(',').map(x=>x.trim());if(a)S.students.push({id:uid(),name:a,num:b||'',cid})});save();render()})}
+
+function newDraft(){return{title:'',cid:S.classes[0]?.id||'',date:new Date().toISOString().slice(0,10),lang:'mixed',qs:[{id:uid(),type:'mcq',label:'1',pts:1,key:'',alt:'',opts:'A,B,C,D',note:''}],ok:false}}
+function tests(){D=D||newDraft();
+ const q=(x,i)=>`<div class="q"><div class="row"><div><label>#</label><input value="${esc(x.label)}" onchange="D.qs[${i}].label=this.value"></div>
+ <div><label>${t('qt')}</label><select onchange="D.qs[${i}].type=this.value;render()">${[['mcq','mc'],['tf','tf'],['numeric','nu'],['short','sh'],['essay','es']].map(([v,l])=>`<option value="${v}" ${x.type===v?'selected':''}>${t(l)}</option>`).join('')}</select></div>
+ <div><label>${t('pts')}</label><input type="number" min="0" step="0.5" value="${x.pts}" onchange="D.qs[${i}].pts=this.value"></div>
+ ${x.type==='essay'?'':`<div><label>${t('key')}</label><input value="${esc(x.key)}" onchange="D.qs[${i}].key=this.value"></div>`}</div>
+ <div class="row">${x.type==='mcq'?`<div><label>${t('opts')}</label><input value="${esc(x.opts)}" onchange="D.qs[${i}].opts=this.value"></div>`:''}
+ ${x.type==='essay'?'':`<div><label>${t('alt')}</label><input value="${esc(x.alt)}" onchange="D.qs[${i}].alt=this.value"></div>`}<div><label>${t('qn')}</label><input value="${esc(x.note)}" onchange="D.qs[${i}].note=this.value"></div>
+ <button class="b d" style="flex:0 0 auto" onclick="D.qs.splice(${i},1);render()">${t('rm')}</button></div></div>`;
+ return `<h2>${t('tests')}</h2><div class="card"><div class="row"><div><label>${t('title')}</label><input value="${esc(D.title)}" onchange="D.title=this.value"></div>
+ <div><label>${t('cls')}</label><select onchange="D.cid=this.value">${S.classes.map(c=>`<option value="${c.id}" ${D.cid===c.id?'selected':''}>${esc(c.name)}</option>`).join('')}</select></div>
+ <div><label>${t('date')}</label><input type="date" value="${D.date}" onchange="D.date=this.value"></div>
+ <div><label>${t('lang')}</label><select onchange="D.lang=this.value">${[['ar','ar'],['en','en'],['mixed','mx']].map(([v,l])=>`<option value="${v}" ${D.lang===v?'selected':''}>${t(l)}</option>`).join('')}</select></div></div>
+ ${D.qs.map(q).join('')}<p><button class="b s" onclick="D.qs.push({id:uid(),type:'mcq',label:String(D.qs.length+1),pts:1,key:'',alt:'',opts:'A,B,C,D',note:''});render()">+ ${t('addq')}</button></p>
+ <p><label style="display:flex;gap:8px;align-items:center;color:var(--tx)"><input type="checkbox" style="width:auto;min-height:0" ${D.ok?'checked':''} onchange="D.ok=this.checked"> ${t('conf')}</label></p>
+ <button class="b" onclick="saveTest()">${t('save')}</button></div>
+ <div class="card">${S.tests.length?S.tests.map(x=>`<div class="row" style="align-items:center"><b>${esc(x.title)}</b><span>${esc(cn(x.cid))} · ${n(mx(x))} ${t('pts')}</span><span class="tag">${t('ready')}</span><button class="b d" style="flex:0 0 auto" onclick="del('tests','${x.id}')">${t('del')}</button></div>`).join('<hr>'):t('none')}</div>`}
+function saveTest(){if(!D.title.trim()||!D.cid||!D.qs.length||D.qs.some(q=>q.type!=='essay'&&!q.key.trim()))return toast(t('needq'));
+ if(!D.ok)return toast(t('needc'));S.tests.push({...D,id:uid(),qs:D.qs});D=null;save();toast(t('saved'));render()}
+
+function scan(){
+ if(!S.tests.length)return `<h2>${t('scan')}</h2><div class="card">${t('needs')}</div>`;
+ return `<h2>${t('scan')}</h2><div class="card"><p class="note">${t('ocr')}</p><div class="row"><div><label>${t('pick')}</label><select id="pt">${S.tests.map(x=>`<option value="${x.id}">${esc(x.title)}</option>`).join('')}</select></div>
+ <div><label>${t('stu')}</label><select id="ps"><option value="">${t('unassigned')}</option>${S.students.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('')}</select></div></div>
+ <p><b>${t('up')}</b></p><div class="row"><label class="b" style="text-align:center;font-size:1rem;color:var(--acx)">📷 ${t('cam')}<input type="file" accept="image/*" capture="environment" hidden onchange="addPages(this)"></label><label class="b s" style="text-align:center;font-size:1rem;color:var(--tx)">🖼 ${t('gal')}<input type="file" accept="image/*" multiple hidden onchange="addPages(this)"></label></div><p>${t('tips')}</p>
+ <div id="pgs">${SC.pages.map((p,i)=>`<div class="pg"><img src="${p.src}" style="transform:rotate(${p.rot}deg)" alt=""><div>${p.warn.map(x=>`<div class="note">${t(x)}</div>`).join('')}<button class="b s" onclick="SC.pages[${i}].rot=(SC.pages[${i}].rot+90)%360;render()">${t('rot')}</button> <button class="b d" onclick="SC.pages.splice(${i},1);render()">${t('rm')}</button></div></div>`).join('')}</div>
+ <p><button class="b" onclick="startPaper()">${t('go')}</button></p></div>`}
+function addPages(el){const fl=[...el.files];el.value='';fl.forEach(f=>{const r=new FileReader();r.onerror=()=>toast('⚠ '+f.name);r.onload=()=>{const im=new Image();im.onerror=()=>toast('⚠ '+f.name);im.onload=()=>{
+ const k=Math.min(1,1100/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=im.width*k;c.height=im.height*k;const x=c.getContext('2d');x.drawImage(im,0,0,c.width,c.height);
+ const d=x.getImageData(0,0,c.width,c.height).data;let s=0;for(let i=0;i<d.length;i+=40)s+=(d[i]+d[i+1]+d[i+2])/3;const br=s/(d.length/40),warn=[];if(br<70)warn.push('dark');if(Math.max(im.width,im.height)<900)warn.push('small');
+ SC.pages.push({src:c.toDataURL('image/jpeg',.6),rot:0,warn});render()};im.src=r.result};r.readAsDataURL(f)})}
+function startPaper(){const te=S.tests.find(x=>x.id===$('#pt').value);if(!te)return;const p={id:uid(),tid:te.id,sid:$('#ps').value,pages:SC.pages.map(p=>({src:p.src,rot:p.rot})),ans:{},approved:false,log:[]};
+ te.qs.forEach(q=>p.ans[q.id]={a:'',score:0,status:'blank',note:'',auto:true,edited:false,why:'—'});S.papers.push(p);if(!save()){S.papers.pop();return}SC={pages:[]};CUR=p.id;go('review')}
+
+function review(){const p=S.papers.find(x=>x.id===CUR);if(!p){V='res';return res()}const te=S.tests.find(x=>x.id===p.tid);
+ const sv=['correct','incorrect','partial','unreadable','ambiguous','review','blank'];
+ return `<h2>${esc(te.title)}</h2><div class="card"><div class="row"><div><label>${t('students')}</label><select onchange="P().sid=this.value;save()"><option value="">${t('unassigned')}</option>${S.students.map(s=>`<option value="${s.id}" ${p.sid===s.id?'selected':''}>${esc(s.name)}</option>`).join('')}</select></div>
+ <div><label for="zm">${t('zoom')}</label><input id="zm" type="range" min="1" max="3" step=".25" value="1" oninput="document.querySelectorAll('.zi').forEach(i=>i.style.width=this.value*100+'%')"></div></div>
+ <div class="zoom">${p.pages.map(g=>`<img class="zi" style="width:100%;transform:rotate(${g.rot}deg)" src="${g.src}" alt="">`).join('')||t('none')}</div></div>
+ <div class="card"><p class="note">${t('ocr')}</p>${te.qs.map((q,i)=>{const a=p.ans[q.id];return `<div class="q"><h3>${esc(q.label)} · ${t(({mcq:'mc',tf:'tf',numeric:'nu',short:'sh',essay:'es'})[q.type])} · ${n(q.pts)} ${t('pts')}</h3>
+ ${q.note?`<small>${esc(q.note)}</small>`:''}<div class="row"><div><label>${t('stdans')}</label><input data-q="${q.id}" data-f="a" value="${esc(a.a)}"></div><div><label>${t('key')}</label><input disabled value="${q.type==='essay'?'—':esc(q.key)}"></div>
+ <div><label>${t('score')} (0–${n(q.pts)})</label><input type="number" min="0" max="${q.pts}" step="0.5" data-q="${q.id}" data-f="s" value="${a.score}"></div>
+ <div><label>${t('status')}</label><select data-q="${q.id}" data-f="st">${sv.map(s=>`<option value="${s}" ${a.status===s?'selected':''}>${t('t_'+s)}</option>`).join('')}</select></div></div>
+ <div class="row"><div><label>${t('cmt')}</label><input data-q="${q.id}" data-f="n" value="${esc(a.note)}"></div></div>
+ <p>${tag(a.status)} <small>${a.edited?t('edited'):a.auto?t('auto'):''} · ${t('why')}: ${esc(a.why)}</small></p></div>`}).join('')}
+ <h3 id="tt">${t('total')}: ${n(tot(p))} / ${n(mx(te))} (${n(Math.round(tot(p)/mx(te)*100)||0)}%)</h3>
+ ${pend(p)?`<p class="note">${t('blocked')}</p>`:''}<button class="b" ${pend(p)?'disabled':''} onclick="approve()">${p.approved?t('approved')+' ✓':t('approve')}</button>
+ <details><summary>${t('log')}</summary>${p.log.map(l=>`<div>${new Date(l.t).toLocaleString()} · #${esc(l.q)}: ${n(l.from)} → ${n(l.to)}</div>`).join('')||t('none')}</details></div>`}
+const P=()=>S.papers.find(x=>x.id===CUR);
+function bindReview(){document.querySelectorAll('[data-q]').forEach(el=>el.onchange=()=>{const p=P(),te=S.tests.find(x=>x.id===p.tid),q=te.qs.find(x=>x.id===el.dataset.q),a=p.ans[q.id],f=el.dataset.f,old=a.score;
+ if(f==='a'){a.a=el.value;const g=grade(q,el.value);if(g.score!==old)p.log.push({t:Date.now(),q:q.label,from:old,to:g.score});Object.assign(a,g,{edited:false});}
+ if(f==='s'){a.score=Math.max(0,Math.min(+q.pts,+w(el.value)||0));a.edited=true;a.auto=false;if(a.status!=='ambiguous'&&a.status!=='unreadable')a.status=a.score>=+q.pts?'correct':a.score>0?'partial':a.status==='review'?'incorrect':a.status;p.log.push({t:Date.now(),q:q.label,from:old,to:a.score})}
+ if(f==='st'){a.status=el.value;a.edited=true}if(f==='n')a.note=el.value;p.approved=false;save();const y=scrollY;render();scrollTo(0,y)})}
+function approve(){const p=P();if(pend(p))return toast(t('blocked'));p.approved=true;save();toast(t('saved'));render()}
+
+let RS={tid:'',id:false};
+function res(){const te=S.tests.find(x=>x.id===RS.tid)||S.tests[0];if(!te)return `<h2>${t('res')}</h2><div class="card">${t('none')}</div>`;RS.tid=te.id;
+ const all=S.papers.filter(p=>p.tid===te.id),ap=all.filter(p=>p.approved),M=mx(te),sc=ap.map(p=>tot(p)).sort((a,b)=>a-b);
+ const med=sc.length?(sc.length%2?sc[(sc.length-1)/2]:(sc[sc.length/2-1]+sc[sc.length/2])/2):0,avg=sc.length?sc.reduce((a,b)=>a+b,0)/sc.length:0;
+ const bk=[0,0,0,0,0];sc.forEach(s=>bk[Math.min(4,Math.floor(s/M*5))]++);
+ return `<h2>${t('res')}</h2><div class="card"><label>${t('pick')}</label><select onchange="RS.tid=this.value;render()">${S.tests.map(x=>`<option value="${x.id}" ${x.id===te.id?'selected':''}>${esc(x.title)}</option>`).join('')}</select>
+ <p class="note">${t('based').replace('{a}',n(ap.length)).replace('{b}',n(all.length))} ${t('pend')}</p>
+ <div class="stat"><div><b>${n(avg.toFixed(1))}</b>${t('avg')}</div><div><b>${n(med)}</b>${t('med')}</div><div><b>${n(sc.length?sc[sc.length-1]:0)}</b>${t('hi')}</div><div><b>${n(sc.length?sc[0]:0)}</b>${t('lo')}</div></div>
+ <h3>${t('qperf')}</h3>${te.qs.map(q=>{const pc=ap.length?Math.round(ap.filter(p=>p.ans[q.id].score>=+q.pts).length/ap.length*100):0;return `<div class="row" style="align-items:center;flex-wrap:nowrap"><span style="flex:0 0 40px">${esc(q.label)}</span><div style="flex:1"><div class="bar" style="width:${pc}%"></div></div><span style="flex:0 0 50px">${n(pc)}%</span></div>`}).join('')}
+ <h3>0–100% (×5)</h3><div style="display:flex;gap:8px;align-items:end;height:70px">${bk.map(b=>`<div style="flex:1;text-align:center"><div class="bar" style="height:${b/Math.max(1,...bk)*50}px"></div>${n(b)}</div>`).join('')}</div></div>
+ <div class="card sc"><table><tr><th>${t('students')}</th><th>${t('total')}</th><th>%</th><th>${t('status')}</th><th></th></tr>${all.map(p=>`<tr><td>${esc(nm(p.sid))}</td><td>${n(tot(p))}/${n(M)}</td><td>${n(Math.round(tot(p)/M*100))}%</td><td>${p.approved?t('approved')+' ✓':t('t_review')}</td><td><button class="b s" onclick="CUR='${p.id}';go('review')">${t('open')}</button> <button class="b d" onclick="delPaper('${p.id}')">${t('del')}</button></td></tr>`).join('')||`<tr><td>${t('none')}</td></tr>`}</table></div>
+ <div class="card np"><label style="display:flex;gap:8px;align-items:center;color:var(--tx)"><input type="checkbox" style="width:auto;min-height:0" ${RS.id?'checked':''} onchange="RS.id=this.checked"> ${t('inclid')}</label><p><small>${t('sens')}</small></p>
+ <button class="b" onclick="csv()">${t('exp')}</button> <button class="b s" onclick="print()">${t('print')}</button></div>`}
+function delPaper(id){if(!confirm(t('sure')))return;S.papers=S.papers.filter(p=>p.id!==id);save();render()}
+function csv(){const te=S.tests.find(x=>x.id===RS.tid),ap=S.papers.filter(p=>p.tid===te.id&&p.approved);if(!ap.length)return toast(t('none'));
+ const q=v=>'"'+String(v).replace(/"/g,'""')+'"',h=[t('name'),...(RS.id?[t('sid')]:[]),t('total'),'%',...te.qs.map(x=>x.label)];
+ const rows=ap.map(p=>{const s=S.students.find(x=>x.id===p.sid);return [s?.name||'',...(RS.id?[s?.num||'']:[]),tot(p),Math.round(tot(p)/mx(te)*100),...te.qs.map(x=>p.ans[x.id].score)]});
+ const b=new Blob(['\ufeff'+[h,...rows].map(r=>r.map(q).join(',')).join('\n')],{type:'text/csv'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='results.csv';a.click()}
+
+function set(){return `<h2>${t('set')}</h2><div class="card"><div class="row"><button class="b s" onclick="setLang('ar')">العربية</button><button class="b s" onclick="setLang('en')">English</button></div>
+ <p><label style="display:flex;gap:8px;align-items:center;color:var(--tx)"><input type="checkbox" style="width:auto;min-height:0" ${S.ind?'checked':''} onchange="S.ind=this.checked;save();render()"> ${t('digits')}</label></p></div>
+ <div class="card"><p>${t('priv')}</p><p class="note">${t('auth')}</p><button class="b s" onclick="sample()">${t('sample')}</button> <button class="b d" onclick="if(confirm(t('sure'))){S=def();save();render()}">${t('wipe')}</button></div>`}
+function sample(){const c={id:uid(),name:'SAMPLE – 7A'},a={id:uid(),name:'SAMPLE – Student A',num:'S1',cid:c.id},b={id:uid(),name:'SAMPLE – طالب ب',num:'S2',cid:c.id};
+ S.classes.push(c);S.students.push(a,b);S.tests.push({id:uid(),title:'SAMPLE – Quiz',cid:c.id,date:'',lang:'mixed',ok:true,qs:[{id:uid(),type:'mcq',label:'1',pts:1,key:'B',alt:'',opts:'A,B,C,D',note:''},{id:uid(),type:'numeric',label:'2',pts:2,key:'12',alt:'',note:''},{id:uid(),type:'essay',label:'3',pts:5,key:'',alt:'',note:''}]});save();render()}
+render();
+</script></body></html>
